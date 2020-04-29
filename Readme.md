@@ -51,7 +51,7 @@ Command line interface:
 - [X] `open`
 - [X] `os.path.getsize`
 - [X] `os.listdir`
-- [ ] Nested calls
+- [X] Nested calls
 - [ ] `glob.glob`
 - [ ] `Path.write_*`
 - [ ] `from os import method`
@@ -60,7 +60,7 @@ Command line interface:
 
 **Warning:** pathlad is under active development, the API might change without notice.
 
-pathlad is built on top of [2to3](https://docs.python.org/3/library/2to3.html) (just like [black](https://github.com/psf/black)). For now, we the options are identical.
+pathlad is built on top of [2to3](https://docs.python.org/3/library/2to3.html) (just like [black](https://github.com/psf/black)). For now, the options are identical.
 
 ```bash
 Usage: pathlad [options] file|dir ...
@@ -103,8 +103,18 @@ Pull-requests are welcome.
 
 Helpful contributions include:
 - Extending API coverage for `os`, `glob`, `shutils`
-- Dealing with nested paths
 - More robust fixing w.r.t. spacing, optional arguments etc. 
 - A method validation only (for example, a `--check-only` flag)
 - A pre-commit hook
+- Typing of some kind
 - Basically any feature you see in `black` or `isort` etc. 
+- Remove unused `os`, `glob` imports (`flake8 --select F401`, `autoflake --in-place --imports=os,glob,pathlib`) 
+
+## Resources
+
+- http://python3porting.com/2to3.html
+- http://python3porting.com/fixers.html
+- https://lucumr.pocoo.org/2010/2/11/porting-to-python-3-a-guide/
+- https://docs.python.org/3/library/pathlib.html#correspondence-to-tools-in-the-os-module
+- https://github.com/python/cpython/tree/3.8/Lib/lib2to3/fixes
+- https://stackoverflow.com/questions/24508357/how-to-launch-own-2to3-fixer

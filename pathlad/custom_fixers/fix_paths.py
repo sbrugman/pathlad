@@ -1,15 +1,9 @@
-import re
-import symbol
+"""Rudimentary fixer"""
 from lib2to3.pgen2 import token
 from lib2to3.pytree import Leaf
 from lib2to3.fixer_base import BaseFix
-from lib2to3.fixer_util import Attr, Call, Name, Number, Subscript, Node, syms, String, ArgList
+from lib2to3.fixer_util import Call, Name, Node, String
 
-# References:
-# http://python3porting.com/2to3.html
-# http://python3porting.com/fixers.html
-# https://lucumr.pocoo.org/2010/2/11/porting-to-python-3-a-guide/
-# https://docs.python.org/3/library/pathlib.html#correspondence-to-tools-in-the-os-module
 
 Slash = Leaf(token.SLASH, "/", prefix=" ")
 
@@ -126,13 +120,13 @@ class FixPaths(BaseFix):
                                 return x
                             x.append_child(Slash)
 
-                            for e in remaining_args:
+                            for i, e in enumerate(remaining_args):
                                 if isinstance(e.value, Node):
                                     val = e.value
                                 elif isinstance(e.value, Leaf):
                                     val = e.value.value
                                 else:
-                                    val = ""
+                                    continue
 
                                 if e.type == token.STRING and val != ",":
                                     # if self.split_strings and "/" in e.value:
@@ -144,7 +138,11 @@ class FixPaths(BaseFix):
                                     #         else:
                                     #             x.append_child(String('"{}"'.format(part), prefix=" "))
                                     # else:
-                                    x.append_child(String(e, prefix=" "))
+                                    if i < 1:
+                                        p = " "
+                                    else:
+                                        p = ""
+                                    x.append_child(String(e, prefix=p))
                                 else:
                                     x.append_child(Slash)
 

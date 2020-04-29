@@ -1,33 +1,35 @@
 import sys
-from lib2to3.main import main
+from lib2to3.main import main as main_2to3
 from lib2to3.refactor import RefactoringTool, get_fixers_from_package
 from pathlib import Path
 
-# https://stackoverflow.com/questions/24508357/how-to-launch-own-2to3-fixer
 
-# Run using:
-# ```python find_pattern.py -f paths cases/paths.py```
-
-# To write to results dir:
-# ```python find_pattern.py -f paths cases/paths.py -w -n -o results/```
-
-# To overwrite
-# # ```python find_pattern.py -f paths example.py -w```
-def mainx(argv=None):
+def main_pathlad(argv=None):
     if argv is None:
         argv = sys.argv[1:]
 
-    args = ['-f', 'paths'] + argv + ['-w', '-n', '--no-diffs']
+    args = ['-f', 'paths_nested', '-f', 'paths'] + argv + ['-w', '-n', '--no-diffs']
     print('Pathlad: run lib2to3 with ', args)
     sys.path.insert(0, Path(__file__).parent.absolute())
-    sys.exit(main('pathlad.custom_fixers', args=args))
+    main_2to3('pathlad.custom_fixers', args=args)
+
+    # TODO: post-hoc remove unused imports
+    # try:
+    #     from autoflake import main as main_autoflake
+    #     sys.argv = ['--in-place','--imports=os,glob,pathlib','-r', argv]
+    #     main_autoflake()
+    # except ImportError:
+    #     pass
 
 
-def fix_str(input):
+def pathlab_string(input):
     sys.path.insert(0, Path(__file__).parent.absolute())
     refactoring_tool = RefactoringTool(fixer_names=get_fixers_from_package('pathlad.custom_fixers'))
-    return str(refactoring_tool.refactor_string(input + '\n', 'paths'))[:-1]
+    result = input
+    result = str(refactoring_tool.refactor_string(result + '\n', 'paths'))[:-1]
+    result = str(refactoring_tool.refactor_string(result + '\n', 'paths_nested'))[:-1]
+    return result
 
 
 if __name__ == "__main__":
-    mainx(argv=sys.argv)
+    main_pathlad(argv=sys.argv)

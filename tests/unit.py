@@ -1,15 +1,23 @@
 import pytest
 
-from pathlad.find_pattern import fix_str
-
+from pathlad.find_pattern import pathlab_string
 
 unchanged = [
     'root = Path(tmp_path / "dummy_project").resolve()',
     'import sqlalchemy.dialects.postgresql as postgresqltypes',
 ]
 
+nested = {
+    "a = Path(Path(dummy).A).me()": "a = Path(dummy).A.me()",
+    "a = Path(Path(xyz).attr1).attr2": "a = Path(xyz).attr1.attr2",
+    "Path(Path(__file__).resolve()).parent": "Path(__file__).resolve().parent",
+    "Path(Path(xyz).method1()).method2()": "Path(xyz).method1().method2()",
+    "Path(Path(here) / 'torchcrf' /  '__init__.py').open()": "(Path(here) / 'torchcrf' /  '__init__.py').open()",
+    "Path(Path(here) / 'README.rst').open()": "(Path(here) / 'README.rst').open()",
+}
+
 spacing = {
-    "import os\n\nos.path.abspath(\n    \"/home/test\"\n)\n\nos.path.abspath(\"/home/test\")\n":  "import os\nfrom pathlib import Path\n\nPath(\"/home/test\").resolve()\n\nPath(\"/home/test\").resolve()\n",
+    "import os\n\nos.path.abspath(\n    \"/home/test\"\n)\n\nos.path.abspath(\"/home/test\")\n": "import os\nfrom pathlib import Path\n\nPath(\"/home/test\").resolve()\n\nPath(\"/home/test\").resolve()\n",
     "os.path.isabs(\n\txyz\n)": 'Path(xyz).is_absolute()',
 }
 
@@ -46,19 +54,19 @@ tests = {
     "os.path.join(self._datasource.data_context.root_directory, self._base_directory)": "Path(self._datasource.data_context.root_directory) / self._base_directory",
     "os.path.isabs(self._base_directory)": "Path(self._base_directory).is_absolute()",
     'open(file_relative_path(__file__, "checkpoint_template.py"))': 'Path(file_relative_path(__file__, "checkpoint_template.py")).open()',
-    "os.mkdir(os.path.join(project_root_dir, 'great_expectations'))": "Path(Path(project_root_dir) / 'great_expectations').mkdir()",
-    'os.makedirs(os.path.join(context_path, "plugins"))': 'Path(Path(context_path) / "plugins").mkdir(parents=True)',
+    "os.mkdir(os.path.join(project_root_dir, 'great_expectations'))": "(Path(project_root_dir) / 'great_expectations').mkdir()",
+    'os.makedirs(os.path.join(context_path, "plugins"))': '(Path(context_path) / "plugins").mkdir(parents=True)',
     'os.path.normpath(xyz)': 'Path(xyz).resolve()',
     'os.path.realpath(xyz)': 'Path(xyz).resolve()',
     'os.path.getsize(xyz)': 'Path(xyz).stat().st_size',
     '{"base_directory": os.path.join(datasource.data_context.root_directory, "datasources", datasource.name, "generators", name), "other": True}': '{"base_directory": Path(datasource.data_context.root_directory) / "datasources" / datasource.name / "generators" / name, "other": True}',
     'static_assets_source_dir = file_relative_path(__file__, os.path.join("..", "..", "render", "view", "static"))': 'static_assets_source_dir = file_relative_path(__file__, Path("..") / ".." / "render" / "view" / "static")',
-    'os.makedirs(os.path.join(asset_config_path, "my_dag_node"),exist_ok=True,)': 'Path(Path(asset_config_path) / "my_dag_node").mkdir(exist_ok=True, parents=True)',
+    "os.makedirs(os.path.join(asset_config_path, \"my_dag_node\"),exist_ok=True,\n)": '(Path(asset_config_path) / "my_dag_node").mkdir(exist_ok=True, parents=True)',
     'os.listdir(xyz)': 'list(Path(xyz).glob("*"))',
     'os.listdir(path=xyz)': 'list(Path(xyz).glob("*"))',
     'os.listdir()': 'list(Path(".").glob("*"))',
     'os.path.join(self.full_base_directory, *prefix)': 'Path(self.full_base_directory).joinpath(*prefix)',
-    'open(os.path.join(root, "setup.cfg"), "a")': 'Path(Path(root) / "setup.cfg").open("a")'
+    'open(os.path.join(root, "setup.cfg"), "a")': '(Path(root) / "setup.cfg").open("a")'
 
     # Future work:
     # 'os.path.join(xyz, os.pardir)', 'Path(xyz).parent',
@@ -85,23 +93,28 @@ tests = {
     # 'os.removedirs(xyz)': 'shutils',
     # "open(filename, mode='wt').write('')": "Path(filename).touch()"
     # 'Path("/home/very/long/path") / ".."': 'Path("/home/very/long/path").parent'
-
 }
 
 
 @pytest.mark.parametrize(argnames="input,output", argvalues=tests.items())
 def test_path_rewrite(input, output):
-    result = fix_str(input)
+    result = pathlab_string(input)
     assert result == output
 
 
 @pytest.mark.parametrize(argnames="value", argvalues=unchanged)
 def test_path_unchanged(value):
-    result = fix_str(value)
+    result = pathlab_string(value)
     assert result == value
 
 
 @pytest.mark.parametrize(argnames="input,output", argvalues=spacing.items())
 def test_path_spacing(input, output):
-    result = fix_str(input)
+    result = pathlab_string(input)
+    assert result == output
+
+
+@pytest.mark.parametrize(argnames="input,output", argvalues=nested.items())
+def test_nested(input, output):
+    result = pathlab_string(input)
     assert result == output
